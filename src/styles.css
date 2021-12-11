@@ -1,0 +1,15 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.leaflet-container {
+  width: 90%;
+  height: 70vh;
+}
+
+.test-btn {
+  position: fixed;
+  bottom: 30px;
+  left: 40px;
+}
