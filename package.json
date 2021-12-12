@@ -1,10 +1,11 @@
 {
-  "name": "leaflet-tuto-1",
+  "name": "gis-demo-frontend",
   "version": "1.0.0",
-  "description": "hands-on following https://www.qed42.com/blog/building-interactive-maps-leaflet-and-react",
+  "description": "Using Leaflet and Chakra",
   "keywords": [],
   "main": "src/index.js",
   "dependencies": {
+    "@chakra-ui/icons": "1.1.1",
     "@chakra-ui/react": "1.7.3",
     "@emotion/react": "11.7.0",
     "@emotion/styled": "11.6.0",

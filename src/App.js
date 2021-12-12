@@ -10,13 +10,15 @@ import { ChakraProvider } from "@chakra-ui/react";
 
 import { Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton } from "@chakra-ui/react";
 
-import { Input, Button, FormControl, FormErrorMessage, FormLabel, Box, VStack } from "@chakra-ui/react";
+import { Input, Button, FormControl, FormErrorMessage, FormLabel, Box, VStack, InputGroup, InputLeftElement, InputRightElement, IconButton, Badge } from "@chakra-ui/react";
 
-import { useDisclosure } from "@chakra-ui/react";
+import { useDisclosure, useToast } from "@chakra-ui/react";
 
 import { Select, Checkbox, NumberInput, NumberInputField, NumberInputStepper, NumberDecrementStepper, NumberIncrementStepper } from "@chakra-ui/react";
 
 import { Formik, Form, Field } from "formik";
+
+import { SearchIcon } from "@chakra-ui/icons";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -58,10 +60,32 @@ function FormikInput(props) {
   );
 }
 
+function LocToStr(loc) {
+  return "Lat: " + loc.lat.toFixed(6) + ", Lng: " + loc.lng.toFixed(6);
+}
+
+function ReshapeObjShop(shop, loc) {
+  var res = {};
+  var opt = {};
+  opt["cc_acc"] = shop.t1;
+  opt["access"] = shop.t2;
+  opt["cs"] = shop.t3;
+  opt["allhr"] = shop.t4;
+  opt["takeout"] = shop.t5;
+  res.feat = opt;
+  res.name = shop.name;
+  res.addr = shop.addr;
+  res.reg = shop.reg;
+  res.price = [parseInt(shop.pricelower, 10), parseInt(shop.priceupper, 10)];
+  res.loc = [loc.lat, loc.lng];
+  return res;
+}
+
 //Testing change
 function DrawerExample(props) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = useRef();
+  const toast = useToast();
 
   return (
     <>
@@ -76,12 +100,34 @@ function DrawerExample(props) {
 
           <DrawerBody>
             <Formik
-              initialValues={{ name: "Sasuke", addr: "", pricelower: 10 }}
+              initialValues={{ name: "Sasuke", addr: "", reg: 1, pricelower: 10, priceupper: 50, t1: false, t2: false, t3: false, t4: false, t5: false }}
               onSubmit={async (values, actions) => {
                 console.log(props.position);
                 await sleep(500);
-                console.log(JSON.stringify(values, null, 2));
+                console.log(JSON.stringify(ReshapeObjShop(values, props.position), null, 2));
                 actions.setSubmitting(false);
+
+                (async () => {
+                  const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop", {
+                    method: "PUT",
+                    headers: {
+                      Accept: "application/json",
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(ReshapeObjShop(values, props.position))
+                  });
+                  const content = await rawResponse.json();
+
+                  console.log(content);
+
+                  toast({
+                    title: "Success",
+                    description: "Shop added.",
+                    status: "success",
+                    duration: 9000,
+                    isClosable: true
+                  });
+                })();
               }}
             >
               {() => (
@@ -109,21 +155,35 @@ function DrawerExample(props) {
                   <Field name="t1">
                     {({ field, form }) => (
                       <Checkbox {...field} size="md" colorScheme="red">
-                        Checkbox
+                        Credit Card Accepted
                       </Checkbox>
                     )}
                   </Field>
                   <Field name="t2">
                     {({ field, form }) => (
                       <Checkbox {...field} size="md" colorScheme="red">
-                        Checkbox
+                        Accessibility
                       </Checkbox>
                     )}
                   </Field>
                   <Field name="t3">
                     {({ field, form }) => (
                       <Checkbox {...field} size="md" colorScheme="red">
-                        Checkbox
+                        Customer Service
+                      </Checkbox>
+                    )}
+                  </Field>
+                  <Field name="t4">
+                    {({ field, form }) => (
+                      <Checkbox {...field} size="md" colorScheme="red">
+                        Open 24/7
+                      </Checkbox>
+                    )}
+                  </Field>
+                  <Field name="t5">
+                    {({ field, form }) => (
+                      <Checkbox {...field} size="md" colorScheme="red">
+                        Takeout
                       </Checkbox>
                     )}
                   </Field>
@@ -131,8 +191,8 @@ function DrawerExample(props) {
                   <Field name="pricelower">
                     {({ field, form }) => (
                       <FormControl>
-                        <FormLabel>Amount</FormLabel>
-                        <NumberInput {...field} onChange={(val) => form.setFieldValue(field.name, val)} max={50} min={10}>
+                        <FormLabel>Price Range (Lower Limit)</FormLabel>
+                        <NumberInput {...field} onChange={(val) => form.setFieldValue(field.name, val)} max={1000} min={10}>
                           <NumberInputField />
                           <NumberInputStepper>
                             <NumberIncrementStepper />
@@ -142,6 +202,32 @@ function DrawerExample(props) {
                       </FormControl>
                     )}
                   </Field>
+                  <Field name="priceupper">
+                    {({ field, form }) => (
+                      <FormControl>
+                        <FormLabel>Price Range (Upper Limit)</FormLabel>
+                        <NumberInput {...field} onChange={(val) => form.setFieldValue(field.name, val)} max={1000} min={10}>
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
+                      </FormControl>
+                    )}
+                  </Field>
+
+                  <FormControl>
+                    <FormLabel>Location</FormLabel>
+                    <InputGroup>
+                      <InputLeftElement></InputLeftElement>
+                      <Badge colorScheme="green">{LocToStr(props.position)}</Badge>
+                      <Input variant="filled" disabled />
+                      <InputRightElement>
+                        <IconButton colorScheme="blue" icon={<SearchIcon />} />
+                      </InputRightElement>
+                    </InputGroup>
+                  </FormControl>
                 </Form>
               )}
             </Formik>
