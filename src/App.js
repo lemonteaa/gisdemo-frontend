@@ -167,7 +167,7 @@ function DrawerExample(props) {
 
   return (
     <>
-      <Button ref={btnRef} colorScheme="teal" onClick={onOpen}>
+      <Button ref={btnRef} colorScheme="teal" onClick={onOpen} className="test-btn">
         Open
       </Button>
       <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
