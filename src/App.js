@@ -1,10 +1,10 @@
 import "./styles.css";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvent, GeoJSON } from "react-leaflet";
 
 import { Icon } from "leaflet";
 
-import { React, useState, useRef, useMemo } from "react";
+import { React, useState, useRef, useMemo, useEffect } from "react";
 
 import { ChakraProvider } from "@chakra-ui/react";
 
@@ -23,6 +23,15 @@ import { SearchIcon } from "@chakra-ui/icons";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function DraggableMarker(props) {
+  var greenIcon = new Icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
   console.log(props.position);
   const markerRef = useRef(null);
   const eventHandlers = useMemo(
@@ -43,7 +52,44 @@ function DraggableMarker(props) {
   );
   //
 
-  return <Marker draggable={true} eventHandlers={eventHandlers} position={props.position} ref={markerRef}></Marker>;
+  return <Marker draggable={true} eventHandlers={eventHandlers} position={props.position} icon={greenIcon} ref={markerRef}></Marker>;
+}
+
+function LoadShops() {
+  const geoJsonLayer = useRef(null);
+  const [geoData, setGeoData] = useState();
+  const [reqCount, setReqCount] = useState(0);
+
+  const map = useMapEvent("moveend", () => {
+    const sw = map.getBounds().getSouthWest();
+    const ne = map.getBounds().getNorthEast();
+    console.log("SW:" + sw);
+    console.log("NE:" + ne);
+    const box = {
+      sw: [sw.lat, sw.lng],
+      ne: [ne.lat, ne.lng]
+    };
+    console.log(box);
+
+    (async () => {
+      const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop/geojson", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(box)
+      });
+      const content = await rawResponse.json();
+
+      console.log(content);
+
+      //geoJsonLayer.current.clearLayer().addData(content);
+      setGeoData(content);
+      setReqCount(reqCount + 1);
+    })();
+  });
+  return <GeoJSON ref={geoJsonLayer} key={reqCount} data={geoData} />;
 }
 
 function FormikInput(props) {
@@ -263,6 +309,7 @@ export default function App() {
             url="https://maptiler-gislab-lemonteaa.cloud.okteto.net/styles/basic-preview/{z}/{x}/{y}.png"
           />
           <DraggableMarker position={position} setPosition={setPosition} />
+          <LoadShops />
         </MapContainer>
       </Box>
     </ChakraProvider>
