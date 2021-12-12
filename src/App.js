@@ -1,10 +1,12 @@
 import "./styles.css";
 
-import { MapContainer, TileLayer, Marker, Popup, useMapEvent, GeoJSON } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvent, GeoJSON } from "react-leaflet";
 
-import { Icon } from "leaflet";
+import { Icon, Popup } from "leaflet";
 
 import { React, useState, useRef, useMemo, useEffect } from "react";
+
+import { renderToString } from "react-dom/server";
 
 import { ChakraProvider } from "@chakra-ui/react";
 
@@ -13,6 +15,8 @@ import { Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerCo
 import { Input, Button, FormControl, FormErrorMessage, FormLabel, Box, VStack, InputGroup, InputLeftElement, InputRightElement, IconButton, Badge } from "@chakra-ui/react";
 
 import { useDisclosure, useToast } from "@chakra-ui/react";
+
+import { Text, Heading, Stack } from "@chakra-ui/react";
 
 import { Select, Checkbox, NumberInput, NumberInputField, NumberInputStepper, NumberDecrementStepper, NumberIncrementStepper } from "@chakra-ui/react";
 
@@ -56,7 +60,18 @@ function DraggableMarker(props) {
 }
 
 function FeatureToText(prop) {
-  return prop.shop_name + ", " + prop.shop_address;
+  return (
+    <ChakraProvider>
+      <Stack spacing={2}>
+        <Heading as="h4" size="md">
+          {prop.shop_name}
+        </Heading>
+        <Text fontSize="sm" color="gray.500">
+          {prop.shop_address}
+        </Text>
+      </Stack>
+    </ChakraProvider>
+  );
 }
 
 function LoadShops() {
@@ -93,13 +108,17 @@ function LoadShops() {
       setReqCount(reqCount + 1);
     })();
   });
+  //FeatureToText(feature.properties)
+
   return (
     <GeoJSON
       ref={geoJsonLayer}
       key={reqCount}
       data={geoData}
       onEachFeature={(feature, layer) => {
-        if (feature.properties) layer.bindPopup(FeatureToText(feature.properties));
+        //var pop = new Popup().setContent(FeatureToText(feature.properties));
+        const c = renderToString(FeatureToText(feature.properties));
+        if (feature.properties) layer.bindPopup(c);
       }}
     />
   );
