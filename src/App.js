@@ -55,6 +55,10 @@ function DraggableMarker(props) {
   return <Marker draggable={true} eventHandlers={eventHandlers} position={props.position} icon={greenIcon} ref={markerRef}></Marker>;
 }
 
+function FeatureToText(prop) {
+  return prop.shop_name + ", " + prop.shop_address;
+}
+
 function LoadShops() {
   const geoJsonLayer = useRef(null);
   const [geoData, setGeoData] = useState();
@@ -89,7 +93,16 @@ function LoadShops() {
       setReqCount(reqCount + 1);
     })();
   });
-  return <GeoJSON ref={geoJsonLayer} key={reqCount} data={geoData} />;
+  return (
+    <GeoJSON
+      ref={geoJsonLayer}
+      key={reqCount}
+      data={geoData}
+      onEachFeature={(feature, layer) => {
+        if (feature.properties) layer.bindPopup(FeatureToText(feature.properties));
+      }}
+    />
+  );
 }
 
 function FormikInput(props) {
