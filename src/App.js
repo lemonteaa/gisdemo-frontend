@@ -101,6 +101,8 @@ function LoadShops() {
   const [geoData, setGeoData] = useState();
   const [reqCount, setReqCount] = useState(0);
 
+  const toast = useToast();
+
   const map = useMapEvent("moveend", () => {
     const sw = map.getBounds().getSouthWest();
     const ne = map.getBounds().getNorthEast();
@@ -113,21 +115,32 @@ function LoadShops() {
     console.log(box);
 
     (async () => {
-      const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop/geojson", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(box)
-      });
-      const content = await rawResponse.json();
-
-      console.log(content);
-
-      //geoJsonLayer.current.clearLayer().addData(content);
-      setGeoData(content);
-      setReqCount(reqCount + 1);
+      try {
+        const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop/geojson", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(box)
+        });
+        if (!rawResponse.ok) {
+          throw Error(rawResponse.statusText);
+        }
+        const content = await rawResponse.json();
+        console.log(content);
+        //geoJsonLayer.current.clearLayer().addData(content);
+        setGeoData(content);
+        setReqCount(reqCount + 1);
+      } catch (e) {
+        toast({
+          title: "Error",
+          description: e.toString(),
+          status: "error",
+          duration: 9000,
+          isClosable: true
+        });
+      }
     })();
   });
   //FeatureToText(feature.properties)
@@ -207,17 +220,29 @@ function DrawerExample(props) {
                 actions.setSubmitting(false);
 
                 (async () => {
-                  const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop", {
-                    method: "PUT",
-                    headers: {
-                      Accept: "application/json",
-                      "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(ReshapeObjShop(values, props.position))
-                  });
-                  const content = await rawResponse.json();
-
-                  console.log(content);
+                  try {
+                    const rawResponse = await fetch("https://gis-backend-gislab-lemonteaa.cloud.okteto.net/shop", {
+                      method: "PUT",
+                      headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json"
+                      },
+                      body: JSON.stringify(ReshapeObjShop(values, props.position))
+                    });
+                    if (!rawResponse.ok) {
+                      throw Error(rawResponse.statusText);
+                    }
+                    const content = await rawResponse.json();
+                    console.log(content);
+                  } catch (e) {
+                    toast({
+                      title: "Error",
+                      description: e.toString(),
+                      status: "error",
+                      duration: 9000,
+                      isClosable: true
+                    });
+                  }
 
                   toast({
                     title: "Success",
