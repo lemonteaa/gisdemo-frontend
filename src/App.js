@@ -174,7 +174,27 @@ function FormikInput(props) {
 }
 
 function LocToStr(loc) {
-  return "Lat: " + loc.lat.toFixed(6) + ", Lng: " + loc.lng.toFixed(6);
+  function PrintDeg(d) {
+    return d.deg + "\u00b0" + d.min + "\u2032" + d.sec + "\u2033";
+  }
+  return "Lat: " + PrintDeg(DegRep(loc.lat)) + ", Lng: " + PrintDeg(DegRep(loc.lng));
+}
+
+//Hacked together, probably should use a carefully designed util lib instead
+function DegRep(d) {
+  function splitNum(x) {
+    const integral = Math.trunc(x);
+    const decimal = x - integral;
+    return [integral, decimal];
+  }
+  const mdeg = splitNum(d);
+  const mmin = splitNum(mdeg[1] * 60);
+  const msec = mmin[1] * 60;
+  return {
+    deg: mdeg[0],
+    min: mmin[0],
+    sec: msec.toFixed(3)
+  };
 }
 
 function ReshapeObjShop(shop, loc) {
@@ -345,8 +365,11 @@ function DrawerExample(props) {
                     <FormLabel>Location</FormLabel>
                     <InputGroup>
                       <InputLeftElement></InputLeftElement>
-                      <Tag colorScheme="green">{LocToStr(props.position)}</Tag>
-                      <Input variant="filled" disabled />
+                      <Box borderWidth="1px" borderRadius="lg">
+                        <Tag px="2" colorScheme="green">
+                          {LocToStr(props.position)}
+                        </Tag>
+                      </Box>
                       <InputRightElement>
                         <IconButton colorScheme="blue" icon={<SearchIcon />} />
                       </InputRightElement>
