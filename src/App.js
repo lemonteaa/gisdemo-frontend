@@ -12,7 +12,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 
 import { Drawer, DrawerBody, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerContent, DrawerCloseButton } from "@chakra-ui/react";
 
-import { Input, Button, FormControl, FormErrorMessage, FormLabel, Box, VStack, InputGroup, InputLeftElement, InputRightElement, IconButton, Badge } from "@chakra-ui/react";
+import { Input, Button, FormControl, FormErrorMessage, FormLabel, Box, VStack, InputGroup, InputLeftElement, InputRightElement, IconButton, Tag } from "@chakra-ui/react";
 
 import { useDisclosure, useToast } from "@chakra-ui/react";
 
@@ -24,7 +24,29 @@ import { Formik, Form, Field } from "formik";
 
 import { SearchIcon } from "@chakra-ui/icons";
 
+import { extendTheme } from "@chakra-ui/react";
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const myDrawer = {
+  variants: {
+    alwaysOpen: {
+      parts: ["dialog, dialogContainer"],
+      dialog: {
+        pointerEvents: "auto"
+      },
+      dialogContainer: {
+        pointerEvents: "none"
+      }
+    }
+  }
+};
+
+const theme = extendTheme({
+  components: {
+    Drawer: myDrawer
+  }
+});
 
 function DraggableMarker(props) {
   var greenIcon = new Icon({
@@ -170,8 +192,7 @@ function DrawerExample(props) {
       <Button ref={btnRef} colorScheme="teal" onClick={onOpen} className="test-btn">
         Open
       </Button>
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
-        <DrawerOverlay />
+      <Drawer variant="alwaysOpen" isOpen={isOpen} placement="right" onClose={onClose} finalFocusRef={btnRef}>
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader>New Shop</DrawerHeader>
@@ -299,7 +320,7 @@ function DrawerExample(props) {
                     <FormLabel>Location</FormLabel>
                     <InputGroup>
                       <InputLeftElement></InputLeftElement>
-                      <Badge colorScheme="green">{LocToStr(props.position)}</Badge>
+                      <Tag colorScheme="green">{LocToStr(props.position)}</Tag>
                       <Input variant="filled" disabled />
                       <InputRightElement>
                         <IconButton colorScheme="blue" icon={<SearchIcon />} />
@@ -332,7 +353,7 @@ export default function App() {
   };
   const [position, setPosition] = useState(center);
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <DrawerExample className="test-btn" position={position} setPosition={setPosition} />
       <Box>
         <MapContainer center={[22.3327, 114.1709]} zoom={12} scrollWheelZoom={true}>
